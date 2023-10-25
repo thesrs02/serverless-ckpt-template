@@ -1,0 +1,8 @@
+{
+  "input": {
+    "prompt": "lineart handrawn, best quality, extremely detailed",
+    "negative_prompt": "monochrome, lowres, bad anatomy, worst quality, low quality",
+    "image_url": "https://i.pinimg.com/564x/3e/2e/8c/3e2e8c6fa626636eb4e8bdfe78edab3b.jpg",
+    "controlnet_conditioning_scale": 0.5
+  }
+}
