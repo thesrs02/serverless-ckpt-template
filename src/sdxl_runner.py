@@ -96,7 +96,7 @@ def predict(input_map, pipe):
     # scheduler = input_map["scheduler"]
     guidance_scale = input_map["guidance_scale"]
     num_inference_steps = input_map["num_inference_steps"]
-    canny_image = create_canny_image(image_url, input_image_max_size)
+    canny_image = create_canny_image(image_url)
     #
     generator = torch.Generator(device="cpu").manual_seed(seed)
     pipe.scheduler = KDPM2AncestralDiscreteScheduler.from_config(pipe.scheduler.config)
