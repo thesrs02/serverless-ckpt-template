@@ -54,7 +54,7 @@ def init():
     return pipe
 
 
-def create_canny_image(image_url, max_size=768):
+def create_canny_image(image_url):
     image = load_image(image_url)
     image = np.array(image)
     low_threshold = 100
@@ -65,21 +65,21 @@ def create_canny_image(image_url, max_size=768):
     image = np.concatenate([image, image, image], axis=2)
     image = Image.fromarray(image)
 
-    width, height = image.size
-    aspect_ratio = float(width) / float(height)
+    # width, height = image.size
+    # aspect_ratio = float(width) / float(height)
 
-    if width > height:
-        # Landscape
-        new_width = min(width, max_size)
-        new_height = int(new_width / aspect_ratio)
-    else:
-        # Portrait
-        new_height = min(height, max_size)
-        new_width = int(new_height * aspect_ratio)
+    # if width > height:
+    #     # Landscape
+    #     new_width = min(width, max_size)
+    #     new_height = int(new_width / aspect_ratio)
+    # else:
+    #     # Portrait
+    #     new_height = min(height, max_size)
+    #     new_width = int(new_height * aspect_ratio)
 
-    resized_image = image.resize((new_width, new_height))
+    # resized_image = image.resize((new_width, new_height))
 
-    return resized_image
+    return image
 
 
 def predict(input_map, pipe):
@@ -106,13 +106,14 @@ def predict(input_map, pipe):
         optional_params["width"] = output_width
     if output_height is not None:
         optional_params["height"] = output_height
+    if output_height is not None:
+        optional_params["negative_prompt"] = negative_prompt
 
     output = pipe(
         prompt,
         image=canny_image,
         generator=generator,
         guidance_scale=guidance_scale,
-        negative_prompt=negative_prompt,
         num_inference_steps=num_inference_steps,
         controlnet_conditioning_scale=controlnet_conditioning_scale,
         **optional_params,
