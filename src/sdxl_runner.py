@@ -76,7 +76,7 @@ def predict(input_map, setup):
     controlnet_conditioning_scale = input_map["controlnet_conditioning_scale"]
 
     refiner_guidance_scale = input_map["refiner_guidance_scale"]
-    refiner_inference_steps = input_map["refiner_inference_steps"]
+    refiner_num_inference_steps = input_map["refiner_num_inference_steps"]
 
     resize_output_to = input_map["resize_output_to"]
     canny_min_threshold = input_map["canny_min_threshold"]
@@ -102,7 +102,7 @@ def predict(input_map, setup):
         prompt,
         image=pre_refiner_image,
         guidance_scale=refiner_guidance_scale,
-        num_inference_steps=refiner_inference_steps,
+        num_inference_steps=refiner_num_inference_steps,
     ).images[0]
 
     output = resize_large_images(refined_image, resize_output_to)
