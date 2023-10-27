@@ -14,7 +14,7 @@ from diffusers import (
 MODEL_CACHE_DIR = "diffusers-cache"
 VAE_ID = "madebyollin/sdxl-vae-fp16-fix"
 MODEL_ID = "stabilityai/stable-diffusion-xl-base-1.0"
-REFINER_ID = ("stabilityai/stable-diffusion-xl-refiner-1.0",)
+REFINER_ID = "stabilityai/stable-diffusion-xl-refiner-1.0"
 CONTROL_NET_MODE_ID = "diffusers/controlnet-canny-sdxl-1.0"
 
 
