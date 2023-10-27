@@ -10,7 +10,6 @@ from utils.gcloud_upload import upload_images_to_gcloud
 from diffusers import (
     AutoencoderKL,
     ControlNetModel,
-    KDPM2AncestralDiscreteScheduler,
     StableDiffusionXLControlNetPipeline,
 )
 
@@ -48,6 +47,7 @@ def init():
     )
 
     pipe.enable_model_cpu_offload()
+    pipe.enable_xformers_memory_efficient_attention()
     end_time = time.time()
 
     print(f"setup time: {end_time - start_time}")
@@ -57,28 +57,10 @@ def init():
 def create_canny_image(image_url):
     image = load_image(image_url)
     image = np.array(image)
-    low_threshold = 100
-    high_threshold = 200
-
-    image = cv2.Canny(image, low_threshold, high_threshold)
+    image = cv2.Canny(image, 100, 200)
     image = image[:, :, None]
     image = np.concatenate([image, image, image], axis=2)
     image = Image.fromarray(image)
-
-    # width, height = image.size
-    # aspect_ratio = float(width) / float(height)
-
-    # if width > height:
-    #     # Landscape
-    #     new_width = min(width, max_size)
-    #     new_height = int(new_width / aspect_ratio)
-    # else:
-    #     # Portrait
-    #     new_height = min(height, max_size)
-    #     new_width = int(new_height * aspect_ratio)
-
-    # resized_image = image.resize((new_width, new_height))
-
     return image
 
 
@@ -87,32 +69,19 @@ def predict(input_map, pipe):
     negative_prompt = input_map["negative_prompt"]
 
     image_url = input_map["image_url"]
-    output_width = input_map["output_width"]
-    output_height = input_map["output_height"]
-    input_image_max_size = input_map["input_image_max_size"]
     controlnet_conditioning_scale = input_map["controlnet_conditioning_scale"]
 
-    seed = input_map["seed"]
-    # scheduler = input_map["scheduler"]
     guidance_scale = input_map["guidance_scale"]
     num_inference_steps = input_map["num_inference_steps"]
     canny_image = create_canny_image(image_url)
-    #
-    generator = torch.Generator(device="cpu").manual_seed(seed)
-    pipe.scheduler = KDPM2AncestralDiscreteScheduler.from_config(pipe.scheduler.config)
 
     optional_params = {}
-    if output_width is not None:
-        optional_params["width"] = output_width
-    if output_height is not None:
-        optional_params["height"] = output_height
-    if output_height is not None:
+    if negative_prompt is not None:
         optional_params["negative_prompt"] = negative_prompt
 
     output = pipe(
         prompt,
         image=canny_image,
-        generator=generator,
         guidance_scale=guidance_scale,
         num_inference_steps=num_inference_steps,
         controlnet_conditioning_scale=controlnet_conditioning_scale,
