@@ -11,7 +11,6 @@ from diffusers import (
     StableDiffusionXLControlNetPipeline,
 )
 
-
 MODEL_CACHE_DIR = "diffusers-cache"
 VAE_ID = "madebyollin/sdxl-vae-fp16-fix"
 MODEL_ID = "stabilityai/stable-diffusion-xl-base-1.0"
