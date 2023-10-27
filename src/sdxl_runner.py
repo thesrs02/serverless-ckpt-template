@@ -56,7 +56,7 @@ def init():
     end_time = time.time()
 
     print(f"setup time: {end_time - start_time}")
-    return {pipe, refiner}
+    return {"pipe": pipe, "refiner": refiner}
 
 
 def predict(input_map, setup):
