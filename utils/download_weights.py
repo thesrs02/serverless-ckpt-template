@@ -9,6 +9,7 @@ from transformers.utils.hub import move_cache
 from diffusers import (
     AutoencoderKL,
     ControlNetModel,
+    StableDiffusionXLImg2ImgPipeline,
     StableDiffusionXLControlNetPipeline,
 )
 
@@ -16,7 +17,13 @@ move_cache()
 sys.path.append(".")
 
 
-from src.sdxl_runner import MODEL_CACHE_DIR, VAE_ID, MODEL_ID, CONTROL_NET_MODE_ID
+from src.sdxl_runner import (
+    VAE_ID,
+    MODEL_ID,
+    REFINER_ID,
+    MODEL_CACHE_DIR,
+    CONTROL_NET_MODE_ID,
+)
 
 
 if os.path.exists(MODEL_CACHE_DIR):
@@ -38,4 +45,11 @@ pipe = StableDiffusionXLControlNetPipeline.from_pretrained(
 vae = AutoencoderKL.from_pretrained(
     VAE_ID,
     cache_dir=MODEL_CACHE_DIR,
+)
+
+refiner = StableDiffusionXLImg2ImgPipeline.from_pretrained(
+    REFINER_ID,
+    variant="fp16",
+    use_safetensors=True,
+    # torch_dtype=torch.float16,
 )

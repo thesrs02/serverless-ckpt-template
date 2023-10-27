@@ -1,21 +1,21 @@
-import cv2
 import time
 import torch
-import numpy as np
-from PIL import Image
-from diffusers.utils import load_image
+from utils.canny import load_canny_image
+from utils.image_utils import resize_large_images
 from utils.gcloud_upload import upload_images_to_gcloud
-
-
 from diffusers import (
     AutoencoderKL,
     ControlNetModel,
+    DPMSolverMultistepScheduler,
+    StableDiffusionXLImg2ImgPipeline,
     StableDiffusionXLControlNetPipeline,
 )
+
 
 MODEL_CACHE_DIR = "diffusers-cache"
 VAE_ID = "madebyollin/sdxl-vae-fp16-fix"
 MODEL_ID = "stabilityai/stable-diffusion-xl-base-1.0"
+REFINER_ID = ("stabilityai/stable-diffusion-xl-refiner-1.0",)
 CONTROL_NET_MODE_ID = "diffusers/controlnet-canny-sdxl-1.0"
 
 
@@ -26,16 +26,11 @@ def init():
     controlnet = ControlNetModel.from_pretrained(
         CONTROL_NET_MODE_ID,
         local_files_only=True,
-        cache_dir=MODEL_CACHE_DIR,
         torch_dtype=torch.float16,
+        cache_dir=MODEL_CACHE_DIR,
     )
 
-    vae = AutoencoderKL.from_pretrained(
-        VAE_ID,
-        local_files_only=True,
-        torch_dtype=torch.float16,
-        cache_dir=MODEL_CACHE_DIR,
-    )
+    vae = AutoencoderKL.from_pretrained(VAE_ID, torch_dtype=torch.float16)
 
     pipe = StableDiffusionXLControlNetPipeline.from_pretrained(
         MODEL_ID,
@@ -46,46 +41,71 @@ def init():
         cache_dir=MODEL_CACHE_DIR,
     )
 
+    scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
+    pipe.scheduler = scheduler
+
+    refiner = StableDiffusionXLImg2ImgPipeline.from_pretrained(
+        REFINER_ID,
+        variant="fp16",
+        use_safetensors=True,
+        local_files_only=True,
+        torch_dtype=torch.float16,
+        cache_dir=MODEL_CACHE_DIR,
+    ).to("cuda")
+
     pipe.enable_model_cpu_offload()
-    pipe.enable_xformers_memory_efficient_attention()
     end_time = time.time()
 
     print(f"setup time: {end_time - start_time}")
-    return pipe
+    return {pipe, refiner}
 
 
-def create_canny_image(image_url):
-    image = load_image(image_url)
-    image = np.array(image)
-    image = cv2.Canny(image, 100, 200)
-    image = image[:, :, None]
-    image = np.concatenate([image, image, image], axis=2)
-    image = Image.fromarray(image)
-    return image
-
-
-def predict(input_map, pipe):
-    prompt = input_map["prompt"]
-    negative_prompt = input_map["negative_prompt"]
+def predict(input_map, setup):
+    pipe = setup["pipe"]
+    refiner = setup["refiner"]
 
     image_url = input_map["image_url"]
-    controlnet_conditioning_scale = input_map["controlnet_conditioning_scale"]
 
-    guidance_scale = input_map["guidance_scale"]
-    num_inference_steps = input_map["num_inference_steps"]
-    canny_image = create_canny_image(image_url)
+    prompt = input_map["prompt"]
+    prompt_2 = input_map["prompt_2"]
 
-    optional_params = {}
-    if negative_prompt is not None:
-        optional_params["negative_prompt"] = negative_prompt
+    negative_prompt = input_map["negative_prompt"]
+    negative_prompt_2 = input_map["negative_prompt_2"]
 
-    output = pipe(
-        prompt,
-        image=canny_image,
-        guidance_scale=guidance_scale,
-        num_inference_steps=num_inference_steps,
-        controlnet_conditioning_scale=controlnet_conditioning_scale,
-        **optional_params,
+    guidance_scale = input_map = ["guidance_scale"]
+    num_inference_steps = input_map = ["num_inference_steps"]
+    controlnet_conditioning_scale = input_map = ["controlnet_conditioning_scale"]
+
+    refiner_guidance_scale = input_map = ["refiner_guidance_scale"]
+    refiner_inference_steps = input_map = ["refiner_inference_steps"]
+
+    resize_output_to = input_map["resize_output_to"]
+    canny_min_threshold = input_map["canny_min_threshold"]
+    canny_max_threshold = input_map["canny_max_threshold"]
+    apply_input_image_enhancers = input_map["apply_input_image_enhancers"]
+
+    canny_image = load_canny_image(
+        image_url, apply_input_image_enhancers, canny_min_threshold, canny_max_threshold
     )
 
-    return upload_images_to_gcloud(output.images)
+    pre_refiner_image = pipe(
+        prompt=prompt,
+        prompt_2=prompt_2,
+        image=canny_image,
+        guidance_scale=guidance_scale,
+        negative_prompt=negative_prompt,
+        negative_prompt_2=negative_prompt_2,
+        num_inference_steps=num_inference_steps,
+        controlnet_conditioning_scale=controlnet_conditioning_scale,
+    ).images[0]
+
+    refined_image = refiner(
+        prompt,
+        image=pre_refiner_image,
+        guidance_scale=refiner_guidance_scale,
+        num_inference_steps=refiner_inference_steps,
+    ).images[0]
+
+    output = resize_large_images(refined_image, resize_output_to)
+
+    return upload_images_to_gcloud([output])
