@@ -71,12 +71,12 @@ def predict(input_map, setup):
     negative_prompt = input_map["negative_prompt"]
     negative_prompt_2 = input_map["negative_prompt_2"]
 
-    guidance_scale = input_map = ["guidance_scale"]
-    num_inference_steps = input_map = ["num_inference_steps"]
-    controlnet_conditioning_scale = input_map = ["controlnet_conditioning_scale"]
+    guidance_scale = input_map["guidance_scale"]
+    num_inference_steps = input_map["num_inference_steps"]
+    controlnet_conditioning_scale = input_map["controlnet_conditioning_scale"]
 
-    refiner_guidance_scale = input_map = ["refiner_guidance_scale"]
-    refiner_inference_steps = input_map = ["refiner_inference_steps"]
+    refiner_guidance_scale = input_map["refiner_guidance_scale"]
+    refiner_inference_steps = input_map["refiner_inference_steps"]
 
     resize_output_to = input_map["resize_output_to"]
     canny_min_threshold = input_map["canny_min_threshold"]
