@@ -50,5 +50,6 @@ vae = AutoencoderKL.from_pretrained(
 refiner = StableDiffusionXLImg2ImgPipeline.from_pretrained(
     REFINER_ID,
     variant="fp16",
+    cache_dir=MODEL_CACHE_DIR,
     # torch_dtype=torch.float16,
 )
