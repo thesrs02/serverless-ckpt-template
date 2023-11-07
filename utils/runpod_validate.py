@@ -1,20 +1,25 @@
-# import os
+import os
 from runpod.serverless.utils.rp_validator import validate
 
 INPUT_SCHEMA = {
-    "image_url": {"type": str, "required": True},
-    #
     "prompt": {"type": str, "required": True},
-    "prompt_2": {"type": str, "required": False, "default": None},
-    #
+    "image_url": {"type": str, "required": True},
     "negative_prompt": {"type": str, "required": False, "default": None},
-    "negative_prompt_2": {"type": str, "required": False, "default": None},
-    #
     "controlnet_conditioning_scale": {
         "type": float,
         "required": False,
-        "default": 0.5,
+        "default": 0.9,
         "constraints": lambda guidance_scale: 0.1 <= guidance_scale <= 1,
+    },
+    "lora_scale": {
+        "type": float,
+        "required": False,
+        "default": 0.9,
+        "constraints": lambda guidance_scale: 0.1 <= guidance_scale <= 1,
+    },
+    "guess_mode": {
+        "type": bool,
+        "default": True,
     },
     #
     "num_inference_steps": {
@@ -23,56 +28,23 @@ INPUT_SCHEMA = {
         "default": 14,
         "constraints": lambda num_inference_steps: num_inference_steps in range(1, 500),
     },
-    "refiner_num_inference_steps": {
-        "type": int,
-        "required": False,
-        "default": 60,
-        "constraints": lambda num_inference_steps: num_inference_steps in range(1, 500),
-    },
-    #
     "guidance_scale": {
         "type": float,
-        "default": 7,
+        "default": 3.5,
         "required": False,
-        "constraints": lambda guidance_scale: 0 <= guidance_scale <= 20,
-    },
-    "refiner_guidance_scale": {
-        "type": float,
-        "required": False,
-        "default": 7,
         "constraints": lambda guidance_scale: 0 <= guidance_scale <= 20,
     },
     #
-    "canny_min_threshold": {
-        "type": int,
-        "default": 100,
-        "required": False,
-        "constraints": lambda num_inference_steps: num_inference_steps in range(1, 500),
+    "model": {"type": str, "default": None},
+    "model_single_file_url": {
+        "type": str,
+        "default": None,
     },
-    "canny_max_threshold": {
+    "seed": {
         "type": int,
-        "default": 300,
         "required": False,
-        "constraints": lambda num_inference_steps: num_inference_steps in range(1, 500),
+        "default": int.from_bytes(os.urandom(2), "big"),
     },
-    "resize_output_to": {
-        "type": int,
-        "default": 1024,
-        "required": False,
-        "constraints": lambda width: width in [256, 512, 768, 832, 896, 960, 1024],
-    },
-    "apply_input_image_enhancers": {"type": bool, "required": False, "default": True},
-    # "scheduler": {
-    #     "type": str,
-    #     "required": False,
-    #     "default": "DPMSolverMultistep",
-    #     "constraints": lambda scheduler: scheduler in ["DPMSolverMultistep"],
-    # },
-    # "seed": {
-    #     "type": int,
-    #     "required": False,
-    #     "default": int.from_bytes(os.urandom(2), "big"),
-    # },
 }
 
 

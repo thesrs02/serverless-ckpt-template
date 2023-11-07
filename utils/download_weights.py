@@ -3,54 +3,59 @@
 import os
 import shutil
 import sys
+
 from transformers.utils.hub import move_cache
 
+from controlnet_aux import HEDdetector
+from diffusers import ControlNetModel, StableDiffusionControlNetPipeline
+from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 
-from diffusers import (
-    AutoencoderKL,
-    ControlNetModel,
-    StableDiffusionXLImg2ImgPipeline,
-    StableDiffusionXLControlNetPipeline,
+
+from models import (
+    loras_list,
+    base_models,
+    safety_model,
+    controlnet_path,
+    models_cache_dir,
+    controlnet_model,
+    single_file_base_models,
 )
 
 move_cache()
 sys.path.append(".")
 
 
-from src.sdxl_runner import (
-    VAE_ID,
-    MODEL_ID,
-    REFINER_ID,
-    MODEL_CACHE_DIR,
-    CONTROL_NET_MODE_ID,
-)
-
-
-if os.path.exists(MODEL_CACHE_DIR):
-    shutil.rmtree(MODEL_CACHE_DIR)
-os.makedirs(MODEL_CACHE_DIR, exist_ok=True)
+if os.path.exists(models_cache_dir):
+    shutil.rmtree(models_cache_dir)
+os.makedirs(models_cache_dir, exist_ok=True)
 
 # Load to download automatically
+hed = HEDdetector.from_pretrained(controlnet_path)
+safety_checker = StableDiffusionSafetyChecker.from_pretrained(safety_model)
+
 controlnet = ControlNetModel.from_pretrained(
-    CONTROL_NET_MODE_ID,
-    cache_dir=MODEL_CACHE_DIR,
+    controlnet_model,
+    cache_dir=models_cache_dir,
 )
 
-pipe = StableDiffusionXLControlNetPipeline.from_pretrained(
-    MODEL_ID,
+for base_model in base_models:
+    pipe = StableDiffusionControlNetPipeline.from_pretrained(
+        controlnet_model,
+        controlnet=controlnet,
+        cache_dir=models_cache_dir,
+    )
+
+for single_file_path in single_file_base_models:
+    pipe = StableDiffusionControlNetPipeline.from_single_file(
+        single_file_path,
+        controlnet=controlnet,
+    )
+
+pipe = StableDiffusionControlNetPipeline.from_pretrained(
+    base_models[0],
     controlnet=controlnet,
-    cache_dir=MODEL_CACHE_DIR,
+    cache_dir=models_cache_dir,
 )
 
-vae = AutoencoderKL.from_pretrained(
-    VAE_ID,
-    cache_dir=MODEL_CACHE_DIR,
-)
-
-refiner = StableDiffusionXLImg2ImgPipeline.from_pretrained(
-    REFINER_ID,
-    variant="fp16",
-    use_safetensors=True,
-    cache_dir=MODEL_CACHE_DIR,
-    # torch_dtype=torch.float16,
-)
+for lora_weight_name in loras_list:
+    pipe = pipe.load_lora_weights("rehanhaider/sd-loras", weight_name=lora_weight_name)
