@@ -13,14 +13,12 @@ from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 move_cache()
 sys.path.append(".")
 
-
-from src.sd_runner import models_cache_dir
-
 from models import (
     loras_list,
     base_models,
     safety_model,
     controlnet_path,
+    models_cache_dir,
     controlnet_model,
     single_file_base_models,
 )
@@ -33,6 +31,7 @@ os.makedirs(models_cache_dir, exist_ok=True)
 # Load to download automatically
 hed = HEDdetector.from_pretrained(controlnet_path)
 print("HED Downloaded")
+safety_checker = StableDiffusionSafetyChecker.from_pretrained(safety_model)
 
 safety_checker = StableDiffusionSafetyChecker.from_pretrained(
     safety_model,

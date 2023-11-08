@@ -20,9 +20,8 @@ from utils.models import (
     safety_model,
     controlnet_path,
     controlnet_model,
+    models_cache_dir,
 )
-
-models_cache_dir = "diffusers-cache"
 
 
 def init() -> dict:
