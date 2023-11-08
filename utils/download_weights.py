@@ -1,17 +1,12 @@
 #!/usr/bin/env python
 
 import os
-import shutil
 import sys
-
-from transformers.utils.hub import move_cache
+import shutil
 
 from controlnet_aux import HEDdetector
-from diffusers import (
-    ControlNetModel,
-    StableDiffusionPipeline,
-    StableDiffusionControlNetPipeline,
-)
+from transformers.utils.hub import move_cache
+from diffusers import ControlNetModel, StableDiffusionControlNetPipeline
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 
 
@@ -61,7 +56,7 @@ for single_file_path in single_file_base_models:
         single_file_path,
         controlnet=controlnet,
     )
-    
+
 print("all single_file_models Downloaded")
 
 pipe = StableDiffusionControlNetPipeline.from_pretrained(
@@ -71,6 +66,8 @@ pipe = StableDiffusionControlNetPipeline.from_pretrained(
 )
 
 for lora_weight_name in loras_list:
-    pipe.load_lora_weights("rehanhaider/sd-loras", weight_name=lora_weight_name, cache_dir=models_cache_dir)
-    
+    pipe.load_lora_weights(
+        "rehanhaider/sd-loras", weight_name=lora_weight_name, cache_dir=models_cache_dir
+    )
+
 print("all LORAS Downloaded")

@@ -9,73 +9,120 @@ from diffusers.utils import load_image
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 from diffusers import (
     ControlNetModel,
-    StableDiffusionPipeline,
-    StableDiffusionControlNetPipeline,
     EulerAncestralDiscreteScheduler,
+    StableDiffusionControlNetPipeline,
 )
 
-MODEL_CACHE_DIR = "diffusers-cache"
-VAE_ID = "madebyollin/sdxl-vae-fp16-fix"
-MODEL_ID = "stabilityai/stable-diffusion-xl-base-1.0"
-REFINER_ID = "stabilityai/stable-diffusion-xl-refiner-1.0"
-CONTROL_NET_MODE_ID = "lllyasviel/ControlNet"
+from utils.models import (
+    safety_model,
+    models_cache_dir,
+    controlnet_path,
+    controlnet_model,
+)
 
 
-def init():
+def init() -> dict:
     start_time = time.time()
-    print("Loading pipeline...")
+    print("Initializing pipeline...")
+
+    hed = HEDdetector.from_pretrained(
+        controlnet_path,
+        local_files_only=True,
+        torch_dtype=torch.float16,
+        cache_dir=models_cache_dir,
+    )
+
+    safety_checker = StableDiffusionSafetyChecker.from_pretrained(
+        safety_model,
+        local_files_only=True,
+        torch_dtype=torch.float16,
+        cache_dir=models_cache_dir,
+    )
 
     controlnet = ControlNetModel.from_pretrained(
-        CONTROL_NET_MODE_ID,
+        controlnet_model,
         local_files_only=True,
         torch_dtype=torch.float16,
-        cache_dir=MODEL_CACHE_DIR,
+        cache_dir=models_cache_dir,
     )
 
-    vae = AutoencoderKL.from_pretrained(VAE_ID, torch_dtype=torch.float16)
-
-    pipe = StableDiffusionXLControlNetPipeline.from_pretrained(
-        MODEL_ID,
-        vae=vae,
-        local_files_only=True,
-        controlnet=controlnet,
-        torch_dtype=torch.float16,
-        cache_dir=MODEL_CACHE_DIR,
-    )
-
-    scheduler = DPMSolverMultistepScheduler.from_config(pipe.scheduler.config)
-    pipe.scheduler = scheduler
-
-    refiner = StableDiffusionXLImg2ImgPipeline.from_pretrained(
-        REFINER_ID,
-        variant="fp16",
-        use_safetensors=True,
-        local_files_only=True,
-        torch_dtype=torch.float16,
-        cache_dir=MODEL_CACHE_DIR,
-    ).to("cuda")
-
-    pipe.enable_model_cpu_offload()
     end_time = time.time()
+    print(f"init time: {end_time - start_time}")
 
-    print(f"setup time: {end_time - start_time}")
-    return {"pipe": pipe, "refiner": refiner}
+    return {
+        "hed": hed,
+        "controlnet": controlnet,
+        "safety_checker": safety_checker,
+    }
 
 
-def predict(input_map, setup):
+def load_model_into_pipeline(input: dict) -> dict:
+    start_time = time.time()
+    print("loading models into pipeline...")
+
+    #
+    controlnet = input["controlnet"]
+    safety_checker = input["safety_checker"]
+    #
+    model_file_url = input["model_file_url"]
+    base_model_name = input["base_model_name"]
+    lora_weights_name = input["lora_weights_name"]
+
+    #
+    pipe = (
+        StableDiffusionControlNetPipeline.from_single_file(
+            model_file_url,
+            local_files_only=True,
+            controlnet=controlnet,
+            torch_dtype=torch.float16,
+            cache_dir=models_cache_dir,
+            safety_checker=safety_checker,
+        )
+        if model_file_url or model_file_url == 0
+        else StableDiffusionControlNetPipeline.from_pretrained(
+            base_model_name,
+            safety_checker=None,
+            controlnet=controlnet,
+            local_files_only=True,
+            torch_dtype=torch.float16,
+            cache_dir=models_cache_dir,
+        )
+    )
+
+    if lora_weights_name is not None:
+        pipe = pipe.load_lora_weights(
+            "rehanhaider/sd-loras",
+            local_files_only=True,
+            cache_dir=models_cache_dir,
+            weight_name=lora_weights_name,
+        )
+
+    #
+    compel = Compel(tokenizer=pipe.tokenizer, text_encoder=pipe.text_encoder)
+    pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
+    pipe = pipe.enable_model_cpu_offload()
+
+    #
+    end_time = time.time()
+    print(f"Done. Load time: {end_time - start_time}")
+
+    return {"compel": compel, "pipe": pipe}
+
+
+def predict(setup: dict, input: dict) -> str:
     pipe = setup["pipe"]
     compel = setup["compel"]
 
-    seed = input_map["seed"]
-    prompt = input_map["prompt"]
-    image_url = input_map["image_url"]
-    lora_scale = input_map["lora_scale"]
-    guess_mode = input_map["guess_mode"]
+    seed = input["seed"]
+    prompt = input["prompt"]
+    image_url = input["image_url"]
+    lora_scale = input["lora_scale"]
+    guess_mode = input["guess_mode"]
 
-    guidance_scale = input_map["guidance_scale"]
-    negative_prompt = input_map["negative_prompt"]
-    num_inference_steps = input_map["num_inference_steps"]
-    controlnet_conditioning_scale = input_map["controlnet_conditioning_scale"]
+    guidance_scale = input["guidance_scale"]
+    negative_prompt = input["negative_prompt"]
+    num_inference_steps = input["num_inference_steps"]
+    controlnet_conditioning_scale = input["controlnet_conditioning_scale"]
 
     #
     image = load_image(image_url)

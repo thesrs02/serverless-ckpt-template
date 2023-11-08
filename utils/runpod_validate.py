@@ -5,12 +5,6 @@ INPUT_SCHEMA = {
     "prompt": {"type": str, "required": True},
     "image_url": {"type": str, "required": True},
     "negative_prompt": {"type": str, "required": False, "default": None},
-    "controlnet_conditioning_scale": {
-        "type": float,
-        "required": False,
-        "default": 0.9,
-        "constraints": lambda guidance_scale: 0.1 <= guidance_scale <= 1,
-    },
     "lora_scale": {
         "type": float,
         "required": False,
@@ -34,12 +28,15 @@ INPUT_SCHEMA = {
         "required": False,
         "constraints": lambda guidance_scale: 0 <= guidance_scale <= 20,
     },
-    #
-    "model": {"type": str, "default": None},
-    "model_single_file_url": {
-        "type": str,
-        "default": None,
+    "controlnet_conditioning_scale": {
+        "type": float,
+        "required": False,
+        "default": 0.9,
+        "constraints": lambda guidance_scale: 0.1 <= guidance_scale <= 1,
     },
+    "model_file_url": {"type": str, "default": None},
+    "base_model_name": {"type": str, "default": None},
+    "lora_weights_name": {"type": str, "default": None},
     "seed": {
         "type": int,
         "required": False,
