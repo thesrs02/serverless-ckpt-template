@@ -14,7 +14,7 @@ move_cache()
 sys.path.append(".")
 
 
-from sd_runner import models_cache_dir
+from src.sd_runner import models_cache_dir
 
 from models import (
     loras_list,
