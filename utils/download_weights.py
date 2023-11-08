@@ -10,6 +10,9 @@ from diffusers import ControlNetModel, StableDiffusionControlNetPipeline
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 
 
+move_cache()
+sys.path.append(".")
+
 from models import (
     loras_list,
     base_models,
@@ -19,9 +22,6 @@ from models import (
     controlnet_model,
     single_file_base_models,
 )
-
-move_cache()
-sys.path.append(".")
 
 
 if os.path.exists(models_cache_dir):
