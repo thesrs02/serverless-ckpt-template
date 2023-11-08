@@ -30,7 +30,6 @@ def init() -> dict:
 
     hed = HEDdetector.from_pretrained(
         controlnet_path,
-        local_files_only=True,
         cache_dir=models_cache_dir,
     )
 
