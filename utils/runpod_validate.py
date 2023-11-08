@@ -1,4 +1,3 @@
-# utils/runpod_validate.py
 import os
 from runpod.serverless.utils.rp_validator import validate
 
