@@ -23,6 +23,8 @@ from utils.models import (
     controlnet_model,
 )
 
+models_cache_dir = "diffusers-cache"
+
 
 def init() -> dict:
     start_time = time.time()

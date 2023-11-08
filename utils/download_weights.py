@@ -13,12 +13,14 @@ from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
 move_cache()
 sys.path.append(".")
 
+
+from sd_runner import models_cache_dir
+
 from models import (
     loras_list,
     base_models,
     safety_model,
     controlnet_path,
-    models_cache_dir,
     controlnet_model,
     single_file_base_models,
 )

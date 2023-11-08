@@ -1,5 +1,3 @@
-models_cache_dir = "diffusers-cache"
-
 controlnet_path = "lllyasviel/ControlNet"
 controlnet_model = "lllyasviel/sd-controlnet-hed"
 safety_model = "CompVis/stable-diffusion-safety-checker"
