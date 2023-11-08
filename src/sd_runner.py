@@ -18,7 +18,6 @@ from diffusers import (
 
 from utils.models import (
     safety_model,
-    models_cache_dir,
     controlnet_path,
     controlnet_model,
 )
