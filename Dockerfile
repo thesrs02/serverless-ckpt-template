@@ -30,6 +30,6 @@ RUN apt-get update && apt-get install -y libgl1-mesa-glx
 RUN rm -rf /root/.cache/huggingface/transformers
 RUN python3 ./utils/download_weights.py
 
-RUN echo "Successfully downloaded all weights for SDLX"
+RUN echo "Successfully downloaded all weights for SD"
 
 CMD python3 -u /opt/ckpt/runpod_infer.py

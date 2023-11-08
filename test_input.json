@@ -1,6 +1,7 @@
 {
   "input": {
-    "image_url": "https://images.pexels.com/photos/3484670/pexels-photo-3484670.jpeg?auto=compress&cs=tinysrgb&dpr=1&h=1024&width=768&ar=3:4&fit=crop",
-    "prompt": "perfect anime art, best quality"
+    "base_model_name": "Lykon/dreamshaper-8",
+    "prompt": "perfect anime art, best quality",
+    "image_url": "https://images.pexels.com/photos/3484670/pexels-photo-3484670.jpeg?auto=compress&cs=tinysrgb&dpr=1&h=1024&width=768&ar=3:4&fit=crop"
   }
 }

@@ -1,9 +1,14 @@
+# ./runpod_infer.py
 import runpod
 import src.sd_runner as model
+
+#
+from diffusers.utils import load_image
 from utils.runpod_validate import validate_job_input
 
+
 model_cache = {}
-hed, controlnet, safety_checker = model.init()
+hed, controlnet, safety_checker = model.init().values()
 
 
 def handler(job: dict) -> dict:
@@ -15,11 +20,9 @@ def handler(job: dict) -> dict:
 
     input = validated_input["validated_input"]
     #
-    #
     model_file_url = input["model_file_url"]
     base_model_name = input["base_model_name"]
     lora_weights_name = input["lora_weights_name"]
-    #
     #
     load_model_dict = {
         "controlnet": controlnet,
@@ -30,15 +33,17 @@ def handler(job: dict) -> dict:
     }
 
     cache_key = (model_file_url, base_model_name, lora_weights_name)
+
     if cache_key not in model_cache:
         model_cache[cache_key] = model.load_model_into_pipeline(load_model_dict)
 
-    pipe, compel = model_cache[cache_key]
-
+    model_data = model_cache[cache_key]
+    pipe = model_data["pipe"]
+    compel = model_data["compel"]
     #
-    #
-    image_url = input["image_url"]
-    image = hed(image_url)
+    image = input["image_url"]
+    image = load_image(image)
+    image = hed(image)
 
     return model.predict({"pipe": pipe, "compel": compel}, {**input, "image": image})
 

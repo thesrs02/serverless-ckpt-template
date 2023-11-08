@@ -1,12 +1,15 @@
+import io
 import time
 import torch
+import base64
 
 #
-from PIL import Image
 from compel import Compel
 from controlnet_aux import HEDdetector
 from diffusers.utils import load_image
 from diffusers.pipelines.stable_diffusion import StableDiffusionSafetyChecker
+
+#
 from diffusers import (
     ControlNetModel,
     EulerAncestralDiscreteScheduler,
@@ -27,8 +30,6 @@ def init() -> dict:
 
     hed = HEDdetector.from_pretrained(
         controlnet_path,
-        local_files_only=True,
-        torch_dtype=torch.float16,
         cache_dir=models_cache_dir,
     )
 
@@ -68,9 +69,16 @@ def load_model_into_pipeline(input: dict) -> dict:
     base_model_name = input["base_model_name"]
     lora_weights_name = input["lora_weights_name"]
 
-    #
     pipe = (
-        StableDiffusionControlNetPipeline.from_single_file(
+        StableDiffusionControlNetPipeline.from_pretrained(
+            base_model_name,
+            controlnet=controlnet,
+            local_files_only=True,
+            torch_dtype=torch.float16,
+            cache_dir=models_cache_dir,
+        )
+        if model_file_url is None
+        else StableDiffusionControlNetPipeline.from_single_file(
             model_file_url,
             local_files_only=True,
             controlnet=controlnet,
@@ -78,29 +86,19 @@ def load_model_into_pipeline(input: dict) -> dict:
             cache_dir=models_cache_dir,
             safety_checker=safety_checker,
         )
-        if model_file_url or model_file_url == 0
-        else StableDiffusionControlNetPipeline.from_pretrained(
-            base_model_name,
-            safety_checker=None,
-            controlnet=controlnet,
-            local_files_only=True,
-            torch_dtype=torch.float16,
-            cache_dir=models_cache_dir,
-        )
     )
 
     if lora_weights_name is not None:
-        pipe = pipe.load_lora_weights(
+        pipe.load_lora_weights(
             "rehanhaider/sd-loras",
             local_files_only=True,
             cache_dir=models_cache_dir,
             weight_name=lora_weights_name,
         )
-
     #
     compel = Compel(tokenizer=pipe.tokenizer, text_encoder=pipe.text_encoder)
     pipe.scheduler = EulerAncestralDiscreteScheduler.from_config(pipe.scheduler.config)
-    pipe = pipe.enable_model_cpu_offload()
+    pipe.enable_model_cpu_offload()
 
     #
     end_time = time.time()
@@ -143,4 +141,8 @@ def predict(setup: dict, input: dict) -> str:
 
     output = images[0]
 
-    return output  # in base64
+    buffered = io.BytesIO()
+    output.save(buffered, format="JPEG")
+    image_base64 = base64.b64encode(buffered.getvalue()).decode()
+
+    return "data:image/png;base64," + image_base64

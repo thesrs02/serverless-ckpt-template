@@ -1,18 +1,20 @@
+# utils/runpod_validate.py
 import os
 from runpod.serverless.utils.rp_validator import validate
 
 INPUT_SCHEMA = {
-    "prompt": {"type": str, "required": True},
+    "prompt": {"type": str, "required": False, "default": ""},
     "image_url": {"type": str, "required": True},
     "negative_prompt": {"type": str, "required": False, "default": None},
     "lora_scale": {
         "type": float,
-        "required": False,
         "default": 0.9,
+        "required": False,
         "constraints": lambda guidance_scale: 0.1 <= guidance_scale <= 1,
     },
     "guess_mode": {
         "type": bool,
+        "required": False,
         "default": True,
     },
     #
@@ -34,14 +36,14 @@ INPUT_SCHEMA = {
         "default": 0.9,
         "constraints": lambda guidance_scale: 0.1 <= guidance_scale <= 1,
     },
-    "model_file_url": {"type": str, "default": None},
-    "base_model_name": {"type": str, "default": None},
-    "lora_weights_name": {"type": str, "default": None},
     "seed": {
         "type": int,
         "required": False,
         "default": int.from_bytes(os.urandom(2), "big"),
     },
+    "base_model_name": {"type": str, "default": None, "required": True},
+    "model_file_url": {"type": str, "default": None, "required": False},
+    "lora_weights_name": {"type": str, "default": None, "required": False},
 }
 
 
