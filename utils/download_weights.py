@@ -29,9 +29,11 @@ if os.path.exists(models_cache_dir):
 os.makedirs(models_cache_dir, exist_ok=True)
 
 # Load to download automatically
-hed = HEDdetector.from_pretrained(controlnet_path)
+hed = HEDdetector.from_pretrained(
+    controlnet_path,
+    cache_dir=models_cache_dir,
+)
 print("HED Downloaded")
-safety_checker = StableDiffusionSafetyChecker.from_pretrained(safety_model)
 
 safety_checker = StableDiffusionSafetyChecker.from_pretrained(
     safety_model,
