@@ -1,6 +1,6 @@
 {
   "input": {
-    "model_name": "dreamshaper",
+    "model_name": "openjourney",
     "prompt": "perfect anime art, best quality",
     "image_url": "https://huggingface.co/datasets/rehanhaider/test-images/resolve/main/Matt%20Leitz%20square%20profile%20pic%20outdoors.jpeg"
   }
