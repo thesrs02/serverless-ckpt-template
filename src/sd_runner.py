@@ -51,8 +51,9 @@ def init(local_files_only=True):
         dreamshaper.scheduler.config
     )
 
-    openjourney.enable_model_cpu_offload()
-    dreamshaper.enable_model_cpu_offload()
+    if local_files_only:
+        openjourney.enable_model_cpu_offload()
+        dreamshaper.enable_model_cpu_offload()
 
     end_time = time.time()
     print(f"setup time: {end_time - start_time}")
