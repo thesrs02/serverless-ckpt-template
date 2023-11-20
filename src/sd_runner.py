@@ -61,6 +61,9 @@ def init(local_files_only=True):
 
 
 def predict(setup: dict, input: dict) -> str:
+    start_time = time.time()
+    print("Generating...")
+
     hed = setup["hed"]
     openjourney = setup["openjourney"]
     dreamshaper = setup["dreamshaper"]
@@ -68,7 +71,7 @@ def predict(setup: dict, input: dict) -> str:
     prompt = input["prompt"]
     image_url = input["image_url"]
 
-    model_name = input["model"]
+    model_name = input["model_name"]
 
     guidance_scale = input["guidance_scale"]
     negative_prompt = input["negative_prompt"]
@@ -93,4 +96,8 @@ def predict(setup: dict, input: dict) -> str:
     buffered = io.BytesIO()
     output.save(buffered, format="JPEG")
     image_base64 = base64.b64encode(buffered.getvalue()).decode()
+
+    end_time = time.time()
+    print(f"Generation time: {end_time - start_time}")
+
     return "data:image/png;base64," + image_base64
