@@ -98,6 +98,6 @@ def predict(setup: dict, input: dict) -> str:
     image_base64 = base64.b64encode(buffered.getvalue()).decode()
 
     end_time = time.time()
-    print(f"Generation time: {end_time - start_time}")
+    print(f"Completed In: {end_time - start_time} seconds. Model used: {model_name}")
 
     return "data:image/png;base64," + image_base64
