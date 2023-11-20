@@ -2,14 +2,13 @@
 import os
 import sys
 import shutil
-
 from transformers.utils.hub import move_cache
 
 
 move_cache()
 sys.path.append(".")
 
-from sd_runner import init, models_cache_dir
+from src.sd_runner import init, models_cache_dir
 
 
 if os.path.exists(models_cache_dir):
