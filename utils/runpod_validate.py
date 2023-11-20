@@ -1,22 +1,11 @@
-import os
 from runpod.serverless.utils.rp_validator import validate
 
 INPUT_SCHEMA = {
     "prompt": {"type": str, "required": False, "default": ""},
+    "negative_prompt": {"type": str, "default": "", "required": False},
     "image_url": {"type": str, "required": True},
-    "negative_prompt": {"type": str, "required": False, "default": None},
-    "lora_scale": {
-        "type": float,
-        "default": 0.9,
-        "required": False,
-        "constraints": lambda guidance_scale: 0.1 <= guidance_scale <= 1,
-    },
-    "guess_mode": {
-        "type": bool,
-        "required": False,
-        "default": True,
-    },
     #
+    "model_name": {"type": str, "required": True, "default": "openjourney"},
     "num_inference_steps": {
         "type": int,
         "required": False,
@@ -29,20 +18,6 @@ INPUT_SCHEMA = {
         "required": False,
         "constraints": lambda guidance_scale: 0 <= guidance_scale <= 20,
     },
-    "controlnet_conditioning_scale": {
-        "type": float,
-        "required": False,
-        "default": 0.9,
-        "constraints": lambda guidance_scale: 0.1 <= guidance_scale <= 1,
-    },
-    "seed": {
-        "type": int,
-        "required": False,
-        "default": int.from_bytes(os.urandom(2), "big"),
-    },
-    "base_model_name": {"type": str, "default": None, "required": True},
-    "model_file_url": {"type": str, "default": None, "required": False},
-    "lora_weights_name": {"type": str, "default": None, "required": False},
 }
 
 

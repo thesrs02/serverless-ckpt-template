@@ -1,7 +1,7 @@
 {
   "input": {
-    "base_model_name": "Lykon/dreamshaper-8",
+    "model_name": "dreamshaper",
     "prompt": "perfect anime art, best quality",
-    "image_url": "https://images.pexels.com/photos/3484670/pexels-photo-3484670.jpeg?auto=compress&cs=tinysrgb&dpr=1&h=1024&width=768&ar=3:4&fit=crop"
+    "image_url": "https://huggingface.co/datasets/rehanhaider/test-images/resolve/main/Matt%20Leitz%20square%20profile%20pic%20outdoors.jpeg"
   }
 }
