@@ -23,7 +23,7 @@ def init(local_files_only=True):
 
     controlnet = ControlNetModel.from_pretrained(
         "lllyasviel/sd-controlnet-hed",
-        torch_dtype=torch.float16,
+        torch_dtype=torch.float32,
         cache_dir=models_cache_dir,
         local_files_only=local_files_only,
     )
@@ -31,7 +31,7 @@ def init(local_files_only=True):
     openjourney = StableDiffusionControlNetPipeline.from_pretrained(
         "prompthero/openjourney-v4",
         controlnet=controlnet,
-        torch_dtype=torch.float16,
+        torch_dtype=torch.float32,
         cache_dir=models_cache_dir,
         local_files_only=local_files_only,
     )
@@ -39,7 +39,7 @@ def init(local_files_only=True):
     dreamshaper = StableDiffusionControlNetPipeline.from_pretrained(
         "Lykon/dreamshaper-7",
         controlnet=controlnet,
-        torch_dtype=torch.float16,
+        torch_dtype=torch.float32,
         cache_dir=models_cache_dir,
         local_files_only=local_files_only,
     )
