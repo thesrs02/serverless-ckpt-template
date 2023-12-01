@@ -1,3 +1,4 @@
+import os
 from runpod.serverless.utils.rp_validator import validate
 
 INPUT_SCHEMA = {
@@ -17,6 +18,11 @@ INPUT_SCHEMA = {
         "default": 3.5,
         "required": False,
         "constraints": lambda guidance_scale: 0 <= guidance_scale <= 20,
+    },
+    "seed": {
+        "type": int,
+        "required": False,
+        "default": None,
     },
 }
 

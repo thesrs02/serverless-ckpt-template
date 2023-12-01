@@ -2,6 +2,7 @@ import io
 import time
 import torch
 import base64
+import random
 
 from controlnet_aux import HEDdetector
 from diffusers.utils import load_image
@@ -23,7 +24,7 @@ def init(local_files_only=True):
 
     controlnet = ControlNetModel.from_pretrained(
         "lllyasviel/sd-controlnet-hed",
-        torch_dtype=torch.float32,
+        torch_dtype=torch.float16,
         cache_dir=models_cache_dir,
         local_files_only=local_files_only,
     )
@@ -31,7 +32,7 @@ def init(local_files_only=True):
     openjourney = StableDiffusionControlNetPipeline.from_pretrained(
         "prompthero/openjourney-v4",
         controlnet=controlnet,
-        torch_dtype=torch.float32,
+        torch_dtype=torch.float16,
         cache_dir=models_cache_dir,
         local_files_only=local_files_only,
     )
@@ -39,7 +40,7 @@ def init(local_files_only=True):
     dreamshaper = StableDiffusionControlNetPipeline.from_pretrained(
         "Lykon/dreamshaper-7",
         controlnet=controlnet,
-        torch_dtype=torch.float32,
+        torch_dtype=torch.float16,
         cache_dir=models_cache_dir,
         local_files_only=local_files_only,
     )
@@ -54,6 +55,20 @@ def init(local_files_only=True):
     if local_files_only:
         openjourney.enable_model_cpu_offload()
         dreamshaper.enable_model_cpu_offload()
+        # openjourney.enable_attention_slicing()
+        # dreamshaper.enable_attention_slicing()
+
+    # disables safety checks - false positives
+    def disabled_safety_checker(images, clip_input):
+        if len(images.shape) == 4:
+            num_images = images.shape[0]
+            return images, [False] * num_images
+        else:
+            return images, False
+
+    controlnet.safety_checker = disabled_safety_checker
+    openjourney.safety_checker = disabled_safety_checker
+    dreamshaper.safety_checker = disabled_safety_checker
 
     end_time = time.time()
     print(f"setup time: {end_time - start_time}")
@@ -69,6 +84,7 @@ def predict(setup: dict, input: dict) -> str:
     openjourney = setup["openjourney"]
     dreamshaper = setup["dreamshaper"]
 
+    seed = input["seed"]
     prompt = input["prompt"]
     image_url = input["image_url"]
 
@@ -82,17 +98,23 @@ def predict(setup: dict, input: dict) -> str:
     image = load_image(image_url).convert("RGB")
     image = hed(image)
 
+    seed_value = seed or random.randint(0, 1000000)
+
     pipe = openjourney if model_name == "openjourney" else dreamshaper
+    generator = torch.Generator(device="cuda").manual_seed(seed_value)
 
     images = pipe(
         prompt,
         image=image,
+        generator=generator,
         guidance_scale=guidance_scale,
         negative_prompt=negative_prompt,
         num_inference_steps=num_inference_steps,
     ).images
 
     output = images[0]
+
+    # return output // only used for testing
 
     buffered = io.BytesIO()
     output.save(buffered, format="JPEG")
